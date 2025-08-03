@@ -7,64 +7,46 @@
 
 import SwiftUI
 
-struct ContentView: View {
-    var body: some View {
-        GameView()
-    }
+enum ViewPath: Hashable {
+    case ending(won: Bool, answer: String)
 }
 
-struct GameView: View {
-    @State var game = Game()
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+struct ContentView: View {
+    @State private var path: [ViewPath] = []
+    @State private var launchConfiguration = GameConfiguration()
 
     var body: some View {
-        VStack {
-            Text("Time remaining: \(Int(game.remainingTime))")
-            HStack {
-                InputView(characterIndex: 0)
-                InputView(characterIndex: 1)
-                InputView(characterIndex: 2)
-                InputView(characterIndex: 3)
+        NavigationStack(path: $path) {
+            GameView() { gameEnding in
+                path.append(ViewPath.ending(won: gameEnding.won, answer: gameEnding.answer))
+            }
+            .navigationDestination(for: ViewPath.self) { viewPath in
+                switch viewPath {
+                case .ending(let won, let answer):
+                    EndingView(answer: answer, won: won) {
+                        path = []
+                    }
+                    .navigationBarBackButtonHidden()
+                    .toolbar(.hidden)
+                }
             }
         }
-        .environment(game)
-        .padding()
-        .onReceive(timer) { _ in
-            game.update(delta: 1.0)
+        .environment(launchConfiguration)
+    }
+}
+
+@Observable class GameConfiguration {
+    var initialWord: String? = nil
+    var gameTime: TimeInterval = 60.0   // 60 seconds
+
+    init() {
+        if CommandLine.arguments.contains("--uitesting") {
+            initialWord = "ABCD"
+            gameTime = 12.0  // 12 seconds for testing
         }
     }
 }
 
-struct InputView: View {
-    let characterIndex: Int
-    @State var text: String = ""
-    @Environment(Game.self) private var game
-
-    var body: some View {
-        VStack {
-            TextField("?", text: $text)
-                .padding()
-                .multilineTextAlignment(.center)
-                .background(backgroundColor)
-                .cornerRadius(8)
-                .onChange(of: text) { oldText, newText in
-                    if newText.count >= 1 {
-                        text = String(newText.prefix(1))
-                    }
-                    game.guess(index: characterIndex, value: text.first)
-                }
-        }
-    }
-
-    var backgroundColor: Color {
-        switch game.guessStates[characterIndex] {
-        case .correct: Color.green
-        case .unknown: Color.init(white: 0.95)
-        case .wrongPlace: Color.orange
-        case .notInWord: Color.red
-        }
-    }
-}
 #Preview {
     ContentView()
 }
