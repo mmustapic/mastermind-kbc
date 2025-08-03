@@ -7,9 +7,8 @@
 import SwiftUI
 
 @Observable class Game {
-    private let allowedCharacters: [Character] = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    private let wordSize = 4
-    private let gameTime = TimeInterval(floatLiteral: 60.0) // 60 seconds
+    private static let allowedCharacters: [Character] = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    private static let wordSize = 4
 
     // state for character guesses
     enum GuessState {
@@ -36,7 +35,13 @@ import SwiftUI
     private var guesses: [Character?] = []
     private var answers: [Character] = []
 
-    init(word: String? = nil) {
+    init() {
+        remainingTime = 1.0
+        gameState = .playing
+        setWord(word: "AAAA")
+    }
+
+    func start(word: String? = nil, gameTime: TimeInterval) {
         remainingTime = gameTime
         gameState = .playing
         if let word {
@@ -44,13 +49,14 @@ import SwiftUI
         } else {
             randomize()
         }
+        print("Word is \(answer)")
     }
 
     func update(delta: TimeInterval) {
         remainingTime = max(0.0, remainingTime-delta)
-        if remainingTime == 0.0 {
-            let finalGuesses = guesses.compactMap { $0 }
-            gameState = finalGuesses == answers ? .won : .lost
+        let correctlyGuessed = guesses.compactMap { $0 } == answers
+        if correctlyGuessed || remainingTime == 0.0 {
+            gameState = correctlyGuessed ? .won : .lost
         }
     }
 
@@ -58,11 +64,11 @@ import SwiftUI
     func guess(index: Int, value: Character?) {
         // only allow guesses in allowed characters
         guard index >= 0,
-              index < wordSize else { fatalError("Index should be < \(wordSize)") }
+              index < Game.wordSize else { fatalError("Index should be < \(Game.wordSize)") }
 
         // if value is nil or not allowed, we consider it a non guess, so state is unknown
         guard let value,
-              allowedCharacters.contains(value) else {
+              Game.allowedCharacters.contains(value) else {
             guesses[index] = nil
             guessStates[index] = .unknown
             return
@@ -89,14 +95,14 @@ import SwiftUI
     }
 
     private func randomize() {
-        let word = Array(0..<wordSize).reduce("") { partialResult, i -> String in
-            return partialResult + String(allowedCharacters.randomElement()!)
+        let word = Array(0..<Game.wordSize).reduce("") { partialResult, i -> String in
+            return partialResult + String(Game.allowedCharacters.randomElement()!)
         }
         setWord(word: word)
     }
 
     private func setWord(word: String) {
-        guard word.count == wordSize else { fatalError("Words should have \(wordSize) characters") }
+        guard word.count == Game.wordSize else { fatalError("Words should have \(Game.wordSize) characters") }
         answers = word.map { $0 }
         guesses = answers.map { _ -> Character? in
             nil
@@ -104,6 +110,5 @@ import SwiftUI
         guessStates = answers.map { _ -> GuessState in
             .unknown
         }
-        print("Word is \(answer)")
     }
 }

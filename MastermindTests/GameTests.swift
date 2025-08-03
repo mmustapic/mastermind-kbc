@@ -11,7 +11,8 @@ import Testing
 struct GameTests {
     @Test
     func testInit() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         #expect(game.answer == "XYFG")
     }
 
@@ -23,7 +24,8 @@ struct GameTests {
 
     @Test
     func testGuessesAllCorrect() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.guess(index: 0, value: "X")
         game.guess(index: 1, value: "Y")
         game.guess(index: 2, value: "F")
@@ -36,7 +38,8 @@ struct GameTests {
 
     @Test
     func testGuessesAllNotInWord() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.guess(index: 0, value: "A")
         game.guess(index: 1, value: "B")
         game.guess(index: 2, value: "C")
@@ -49,7 +52,8 @@ struct GameTests {
 
     @Test
     func testGuessesAllUnknown() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         #expect(game.guessStates[0] == .unknown)
         #expect(game.guessStates[1] == .unknown)
         #expect(game.guessStates[2] == .unknown)
@@ -58,7 +62,8 @@ struct GameTests {
 
     @Test
     func testGuessesAllWrongPlace() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.guess(index: 0, value: "Y")
         game.guess(index: 1, value: "F")
         game.guess(index: 2, value: "G")
@@ -71,7 +76,8 @@ struct GameTests {
 
     @Test
     func testGuessesMixed() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.guess(index: 0, value: "X")
         game.guess(index: 1, value: "C")
         game.guess(index: 3, value: "Y")
@@ -83,7 +89,8 @@ struct GameTests {
 
     @Test
     func testGuessesDuplicate() {
-        let game = Game(word: "XYXG")
+        let game = Game()
+        game.start(word: "XYXG", gameTime: 60.0)
         game.guess(index: 0, value: "X")
         game.guess(index: 1, value: "Y")
         game.guess(index: 2, value: "X")
@@ -96,14 +103,16 @@ struct GameTests {
 
     @Test
     func testGameStateStarted() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         #expect(game.remainingTime == 60.0)
         #expect(game.gameState == .playing)
     }
 
     @Test
     func testGameStatePlaying() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.update(delta: 1.5)
         #expect(game.remainingTime == 58.5)
         #expect(game.gameState == .playing)
@@ -111,21 +120,24 @@ struct GameTests {
 
     @Test
     func testGameStateUpdateToZero() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.update(delta: 60.0)
         #expect(game.remainingTime == 0.0)
     }
 
     @Test
     func testGameStateUpdatePastMaxTime() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.update(delta: 70.0)
         #expect(game.remainingTime == 0.0)
     }
 
     @Test
     func testGameStateWon() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.guess(index: 0, value: "X")
         game.guess(index: 1, value: "Y")
         game.guess(index: 2, value: "F")
@@ -136,14 +148,16 @@ struct GameTests {
 
     @Test
     func testGameStateLostNotPlayed() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.update(delta: 60.0)
         #expect(game.gameState == .lost)
     }
 
     @Test
     func testGameStateLost() {
-        let game = Game(word: "XYFG")
+        let game = Game()
+        game.start(word: "XYFG", gameTime: 60.0)
         game.guess(index: 0, value: "X")
         game.guess(index: 1, value: "C")
         game.guess(index: 3, value: "Y")
