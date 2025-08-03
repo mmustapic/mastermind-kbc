@@ -10,16 +10,20 @@ import Testing
 
 struct GameTests {
     @Test
-    func testSetWord() {
+    func testInit() {
+        let game = Game(word: "XYFG")
+        #expect(game.answer == "XYFG")
+    }
+
+    @Test
+    func testInitRandom() {
         let game = Game()
-        game.setWord(word: "XDFG")
-        #expect(game.answer == "XDFG")
+        #expect(game.answer.count == 4)
     }
 
     @Test
     func testGuessesAllCorrect() {
-        let game = Game()
-        game.setWord(word: "XYFG")
+        let game = Game(word: "XYFG")
         game.guess(index: 0, value: "X")
         game.guess(index: 1, value: "Y")
         game.guess(index: 2, value: "F")
@@ -32,8 +36,7 @@ struct GameTests {
 
     @Test
     func testGuessesAllNotInWord() {
-        let game = Game()
-        game.setWord(word: "XYFG")
+        let game = Game(word: "XYFG")
         game.guess(index: 0, value: "A")
         game.guess(index: 1, value: "B")
         game.guess(index: 2, value: "C")
@@ -46,8 +49,7 @@ struct GameTests {
 
     @Test
     func testGuessesAllUnknown() {
-        let game = Game()
-        game.setWord(word: "XYFG")
+        let game = Game(word: "XYFG")
         #expect(game.guessStates[0] == .unknown)
         #expect(game.guessStates[1] == .unknown)
         #expect(game.guessStates[2] == .unknown)
@@ -56,8 +58,7 @@ struct GameTests {
 
     @Test
     func testGuessesAllWrongPlace() {
-        let game = Game()
-        game.setWord(word: "XYFG")
+        let game = Game(word: "XYFG")
         game.guess(index: 0, value: "Y")
         game.guess(index: 1, value: "F")
         game.guess(index: 2, value: "G")
@@ -70,8 +71,7 @@ struct GameTests {
 
     @Test
     func testGuessesMixed() {
-        let game = Game()
-        game.setWord(word: "XYFG")
+        let game = Game(word: "XYFG")
         game.guess(index: 0, value: "X")
         game.guess(index: 1, value: "C")
         game.guess(index: 3, value: "Y")
@@ -81,4 +81,73 @@ struct GameTests {
         #expect(game.guessStates[3] == .wrongPlace)
     }
 
+    @Test
+    func testGuessesDuplicate() {
+        let game = Game(word: "XYXG")
+        game.guess(index: 0, value: "X")
+        game.guess(index: 1, value: "Y")
+        game.guess(index: 2, value: "X")
+        game.guess(index: 3, value: "G")
+        #expect(game.guessStates[0] == .correct)
+        #expect(game.guessStates[1] == .correct)
+        #expect(game.guessStates[2] == .correct)
+        #expect(game.guessStates[3] == .correct)
+    }
+
+    @Test
+    func testGameStateStarted() {
+        let game = Game(word: "XYFG")
+        #expect(game.remainingTime == 60.0)
+        #expect(game.gameState == .playing)
+    }
+
+    @Test
+    func testGameStatePlaying() {
+        let game = Game(word: "XYFG")
+        game.update(delta: 1.5)
+        #expect(game.remainingTime == 58.5)
+        #expect(game.gameState == .playing)
+    }
+
+    @Test
+    func testGameStateUpdateToZero() {
+        let game = Game(word: "XYFG")
+        game.update(delta: 60.0)
+        #expect(game.remainingTime == 0.0)
+    }
+
+    @Test
+    func testGameStateUpdatePastMaxTime() {
+        let game = Game(word: "XYFG")
+        game.update(delta: 70.0)
+        #expect(game.remainingTime == 0.0)
+    }
+
+    @Test
+    func testGameStateWon() {
+        let game = Game(word: "XYFG")
+        game.guess(index: 0, value: "X")
+        game.guess(index: 1, value: "Y")
+        game.guess(index: 2, value: "F")
+        game.guess(index: 3, value: "G")
+        game.update(delta: 60.0)
+        #expect(game.gameState == .won)
+    }
+
+    @Test
+    func testGameStateLostNotPlayed() {
+        let game = Game(word: "XYFG")
+        game.update(delta: 60.0)
+        #expect(game.gameState == .lost)
+    }
+
+    @Test
+    func testGameStateLost() {
+        let game = Game(word: "XYFG")
+        game.guess(index: 0, value: "X")
+        game.guess(index: 1, value: "C")
+        game.guess(index: 3, value: "Y")
+        game.update(delta: 60.0)
+        #expect(game.gameState == .lost)
+    }
 }
